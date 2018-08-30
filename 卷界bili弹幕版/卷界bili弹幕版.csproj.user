@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+    <StartAction>Program</StartAction>
+    <StartProgram>C:\Users\Zou Jin\AppData\Local\Apps\2.0\5BL6VV7K.N7X\KPRHNTZY.T7Z\bili..tion_214ad496f5ff1db0_0001.0000_45965d8b13c26220\Bililive_dm.exe</StartProgram>
+  </PropertyGroup>
+</Project>
