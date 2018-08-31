@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -18,7 +19,7 @@ namespace 卷界bili弹幕版
         public List<int> HaveUser = new List<int>();//用来快速判断是否有这个用户
         public List<int> UserOnline = new List<int>();//用来快速判断 用户是否签到
         public Random rnd = new Random();
-        public int Buff = 0;//全局BUF 获得经验值等奖励 根据在线人数获得
+        public int Buff = 0;//全局BUF 获得了 经验值等奖励 根据在线人数获得
         public FrmMain()
         {
             InitializeComponent();
@@ -54,8 +55,20 @@ namespace 卷界bili弹幕版
                 }
                 if (model.MsgType == BilibiliDM_PluginFramework.MsgTypeEnum.GiftSend)
                 {//礼物：充值内容
-                    OutPut(model.UserName + ":使用 " + model.GiftName + " 获得了 " + 5 * model.GiftCount + " 金钱\n", Color.Crimson);
-                    usr.Money += 5 * model.GiftCount;
+                    if (model.GiftName == "辣条")
+                    {
+                        usr.Money += 5 * model.GiftCount;
+                        OutPut($"{usr.Name}:使用 {model.GiftName}*{model.GiftCount} 获得了 {5 * model.GiftCount} 金钱\n");
+                    }
+                    else
+                    {
+                        JObject staff = JObject.Parse(model.RawData);
+                        int gifmon = staff["data"]["price"].ToObject<int>();
+                        usr.Money += gifmon * model.GiftCount;//加钱      
+                        OutPut($"{usr.Name}:使用 {model.GiftName}*{model.GiftCount} 获得了 { gifmon * model.GiftCount} 金钱\n");
+                    }
+
+
                 }
                 else if (model.CommentText.Contains("#"))
                 {//简单判断是否使用了指令
@@ -74,7 +87,7 @@ namespace 卷界bili弹幕版
                                 {
                                     int gtmoney = rnd.Next(15, (int)(30 * usr.VipBuff() * Buffef()));
                                     UserOnline.Add(model.UserID);
-                                    OutPut(model.UserName + ":签到成功 获得了" + gtmoney + "金钱 宠物体力已经恢复\n");
+                                    OutPut(model.UserName + ":签到成功 获得了 了" + gtmoney + "金钱 宠物体力已经恢复\n");
                                     usr.Money += gtmoney;
                                 }
                                 break;
@@ -91,7 +104,7 @@ namespace 卷界bili弹幕版
                                     gtexp = (int)((rnd.Next(9, 32) * cisu + 1) * 0.1 * Buffef() * usr.VipBuff());
                                     usr.Action -= cisu;
                                     usr.Exp += gtexp;
-                                    OutPut(model.UserName + ":打坐 消耗" + cisu + "点行动值 获得了" + gtexp + "点经验值\n");
+                                    OutPut(model.UserName + ":打坐 消耗" + cisu + "点行动值 获得了 了" + gtexp + "点经验值\n");
                                 }
                                 else
                                 {
@@ -173,7 +186,7 @@ namespace 卷界bili弹幕版
                                             usr.Lv += 1;
                                             usr.Exp -= usr.Lv * 2;
                                             usr.Action = (int)usr.ActionMax();
-                                            OutPut(model.UserName + ":恭喜升级至 Lv" + usr.Lv + " 获得" + Tmp + "行动值已经恢复\n");
+                                            OutPut(model.UserName + ":恭喜升级至 Lv" + usr.Lv + " 获得了 " + Tmp + "行动值已经恢复\n");
                                         }
                                         else
                                         {
