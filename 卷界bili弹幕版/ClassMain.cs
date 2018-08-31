@@ -5,6 +5,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Reflection;
+
 
 namespace 卷界bili弹幕版
 {
@@ -16,7 +18,7 @@ namespace 卷界bili弹幕版
         {
             try
             {
-               
+                AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
                 this.Connected += ClassMain_Connected;
                 this.Disconnected += ClassMain_Disconnected;
                 this.ReceivedDanmaku += ClassMain_ReceivedDanmaku;
@@ -32,6 +34,16 @@ namespace 卷界bili弹幕版
             catch(Exception e)
             {
                 LogOutput(e.ToString());
+            }
+        }
+        private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
+        {
+            string resourceName = "Newtonsoft.Json." + new AssemblyName(args.Name).Name + ".dll";
+            using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName))
+            {
+                byte[] assemblyData = new byte[stream.Length];
+                stream.Read(assemblyData, 0, assemblyData.Length);
+                return Assembly.Load(assemblyData);
             }
         }
         public FrmMain frmMain;
@@ -137,6 +149,7 @@ namespace 卷界bili弹幕版
             richText.SelectionFont = font;
             Outrtf.Rtf = richText.Rtf;
             Outrtf.Select(richText.TextLength, 0);
+            Outrtf.ScrollToCaret();
         }
 
         public static string ColorToHTML(Color Color)

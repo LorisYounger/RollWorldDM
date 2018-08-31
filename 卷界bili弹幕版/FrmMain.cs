@@ -1,14 +1,11 @@
-﻿using Newtonsoft.Json.Linq;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
+using Newtonsoft.Json.Linq;
+
 
 namespace 卷界bili弹幕版
 {
@@ -32,6 +29,7 @@ namespace 卷界bili弹幕版
         public void OutPut(string text, Color color, Font font)
         {
             TextBox1HP.OutPutSuper(TextBox1, text, color, font);
+            TextBox1.Select(TextBox1.TextLength - 1, 1);
         }
         public void OutPut(string text, Color color)
         {
@@ -122,8 +120,7 @@ namespace 卷界bili弹幕版
                                 TextBox1HP.AppendText("/" + usr.Lv * 2 + " HP/攻/防 ", Color.Black, TextBox1.Font);
                                 TextBox1HP.AppendText(usr.HPMax().ToString() + '/' + usr.Attact() + '/' + usr.Defense(), Color.Blue, new Font(TextBox1.Font, FontStyle.Bold));
                                 TextBox1HP.AppendText(" 行动值 ", Color.Black, TextBox1.Font);
-                                TextBox1HP.AppendText(usr.Action.ToString() + '/' + usr.ActionMax() + '\n', Color.Blue, new Font(TextBox1.Font, FontStyle.Bold));
-                                TextBox1HP.OutRTF(TextBox1);
+                                OutPut(usr.Action.ToString() + '/' + usr.ActionMax() + '\n', Color.Blue, new Font(TextBox1.Font, FontStyle.Bold));
                                 break;
                             case "#xj":
                             case "#献祭":
