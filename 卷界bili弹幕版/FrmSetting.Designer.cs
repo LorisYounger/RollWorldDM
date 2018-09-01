@@ -37,6 +37,17 @@
             this.labelt1 = new System.Windows.Forms.Label();
             this.buttonFont = new System.Windows.Forms.Button();
             this.fontDialog1 = new System.Windows.Forms.FontDialog();
+            this.checkBoxNBg = new System.Windows.Forms.CheckBox();
+            this.checkBoxRoll = new System.Windows.Forms.CheckBox();
+            this.buttonBacKColor = new System.Windows.Forms.Button();
+            this.colorDialog1 = new System.Windows.Forms.ColorDialog();
+            this.numericUpDownAutoSafe = new System.Windows.Forms.NumericUpDown();
+            this.buttonAutoSave = new System.Windows.Forms.Button();
+            this.numericUpDownODM = new System.Windows.Forms.NumericUpDown();
+            this.checkBox1 = new System.Windows.Forms.CheckBox();
+            this.buttonSetOrderMax = new System.Windows.Forms.Button();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownAutoSafe)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownODM)).BeginInit();
             this.SuspendLayout();
             // 
             // buttonSave
@@ -107,13 +118,13 @@
             this.labelt1.AutoSize = true;
             this.labelt1.Location = new System.Drawing.Point(114, 70);
             this.labelt1.Name = "labelt1";
-            this.labelt1.Size = new System.Drawing.Size(89, 24);
+            this.labelt1.Size = new System.Drawing.Size(137, 72);
             this.labelt1.TabIndex = 6;
-            this.labelt1.Text = "Power By LB\r\n感谢您使用卷界";
+            this.labelt1.Text = "Power By LB\r\n感谢您使用卷界\r\n\r\n自动保存            秒\r\n\r\n指令上限         次/天";
             // 
             // buttonFont
             // 
-            this.buttonFont.Location = new System.Drawing.Point(209, 71);
+            this.buttonFont.Location = new System.Drawing.Point(12, 99);
             this.buttonFont.Name = "buttonFont";
             this.buttonFont.Size = new System.Drawing.Size(94, 23);
             this.buttonFont.TabIndex = 7;
@@ -121,11 +132,136 @@
             this.buttonFont.UseVisualStyleBackColor = true;
             this.buttonFont.Click += new System.EventHandler(this.buttonFont_Click);
             // 
+            // checkBoxNBg
+            // 
+            this.checkBoxNBg.AutoSize = true;
+            this.checkBoxNBg.Location = new System.Drawing.Point(240, 82);
+            this.checkBoxNBg.Name = "checkBoxNBg";
+            this.checkBoxNBg.Size = new System.Drawing.Size(72, 16);
+            this.checkBoxNBg.TabIndex = 8;
+            this.checkBoxNBg.Text = "背景透明";
+            this.checkBoxNBg.UseVisualStyleBackColor = true;
+            this.checkBoxNBg.CheckedChanged += new System.EventHandler(this.checkBoxNBg_CheckedChanged);
+            // 
+            // checkBoxRoll
+            // 
+            this.checkBoxRoll.AutoSize = true;
+            this.checkBoxRoll.Location = new System.Drawing.Point(240, 64);
+            this.checkBoxRoll.Name = "checkBoxRoll";
+            this.checkBoxRoll.Size = new System.Drawing.Size(48, 16);
+            this.checkBoxRoll.TabIndex = 9;
+            this.checkBoxRoll.Text = "滚轮";
+            this.checkBoxRoll.UseVisualStyleBackColor = true;
+            this.checkBoxRoll.CheckedChanged += new System.EventHandler(this.checkBox1_CheckedChanged);
+            // 
+            // buttonBacKColor
+            // 
+            this.buttonBacKColor.Location = new System.Drawing.Point(12, 128);
+            this.buttonBacKColor.Name = "buttonBacKColor";
+            this.buttonBacKColor.Size = new System.Drawing.Size(94, 23);
+            this.buttonBacKColor.TabIndex = 10;
+            this.buttonBacKColor.Text = "背景颜色设置";
+            this.buttonBacKColor.UseVisualStyleBackColor = true;
+            this.buttonBacKColor.Click += new System.EventHandler(this.buttonBacKColor_Click);
+            // 
+            // numericUpDownAutoSafe
+            // 
+            this.numericUpDownAutoSafe.Increment = new decimal(new int[] {
+            5,
+            0,
+            0,
+            0});
+            this.numericUpDownAutoSafe.Location = new System.Drawing.Point(170, 102);
+            this.numericUpDownAutoSafe.Maximum = new decimal(new int[] {
+            6000000,
+            0,
+            0,
+            0});
+            this.numericUpDownAutoSafe.Minimum = new decimal(new int[] {
+            60,
+            0,
+            0,
+            0});
+            this.numericUpDownAutoSafe.Name = "numericUpDownAutoSafe";
+            this.numericUpDownAutoSafe.Size = new System.Drawing.Size(60, 21);
+            this.numericUpDownAutoSafe.TabIndex = 11;
+            this.numericUpDownAutoSafe.Value = new decimal(new int[] {
+            3600,
+            0,
+            0,
+            0});
+            // 
+            // buttonAutoSave
+            // 
+            this.buttonAutoSave.Location = new System.Drawing.Point(254, 102);
+            this.buttonAutoSave.Name = "buttonAutoSave";
+            this.buttonAutoSave.Size = new System.Drawing.Size(93, 20);
+            this.buttonAutoSave.TabIndex = 12;
+            this.buttonAutoSave.Text = "设置自动保存";
+            this.buttonAutoSave.UseVisualStyleBackColor = true;
+            this.buttonAutoSave.Click += new System.EventHandler(this.buttonAutoSave_Click);
+            // 
+            // numericUpDownODM
+            // 
+            this.numericUpDownODM.Increment = new decimal(new int[] {
+            5,
+            0,
+            0,
+            0});
+            this.numericUpDownODM.Location = new System.Drawing.Point(170, 127);
+            this.numericUpDownODM.Maximum = new decimal(new int[] {
+            10000,
+            0,
+            0,
+            0});
+            this.numericUpDownODM.Minimum = new decimal(new int[] {
+            10,
+            0,
+            0,
+            0});
+            this.numericUpDownODM.Name = "numericUpDownODM";
+            this.numericUpDownODM.Size = new System.Drawing.Size(45, 21);
+            this.numericUpDownODM.TabIndex = 13;
+            this.numericUpDownODM.Value = new decimal(new int[] {
+            100,
+            0,
+            0,
+            0});
+            // 
+            // checkBox1
+            // 
+            this.checkBox1.AutoSize = true;
+            this.checkBox1.Enabled = false;
+            this.checkBox1.Location = new System.Drawing.Point(318, 63);
+            this.checkBox1.Name = "checkBox1";
+            this.checkBox1.Size = new System.Drawing.Size(108, 28);
+            this.checkBox1.TabIndex = 14;
+            this.checkBox1.Text = "收集输出信息\r\n用于游戏平衡性";
+            this.checkBox1.UseVisualStyleBackColor = true;
+            // 
+            // buttonSetOrderMax
+            // 
+            this.buttonSetOrderMax.Location = new System.Drawing.Point(254, 125);
+            this.buttonSetOrderMax.Name = "buttonSetOrderMax";
+            this.buttonSetOrderMax.Size = new System.Drawing.Size(93, 20);
+            this.buttonSetOrderMax.TabIndex = 15;
+            this.buttonSetOrderMax.Text = "设置指令上限";
+            this.buttonSetOrderMax.UseVisualStyleBackColor = true;
+            this.buttonSetOrderMax.Click += new System.EventHandler(this.buttonSetOrderMax_Click);
+            // 
             // FrmSetting
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(425, 103);
+            this.ClientSize = new System.Drawing.Size(425, 160);
+            this.Controls.Add(this.buttonSetOrderMax);
+            this.Controls.Add(this.checkBox1);
+            this.Controls.Add(this.numericUpDownODM);
+            this.Controls.Add(this.buttonAutoSave);
+            this.Controls.Add(this.numericUpDownAutoSafe);
+            this.Controls.Add(this.buttonBacKColor);
+            this.Controls.Add(this.checkBoxRoll);
+            this.Controls.Add(this.checkBoxNBg);
             this.Controls.Add(this.buttonFont);
             this.Controls.Add(this.labelt1);
             this.Controls.Add(this.linkLabelUpg);
@@ -138,6 +274,8 @@
             this.Name = "FrmSetting";
             this.Text = "卷界 控制台";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.FrmSetting_FormClosing);
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownAutoSafe)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownODM)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -154,5 +292,14 @@
         private System.Windows.Forms.Label labelt1;
         private System.Windows.Forms.Button buttonFont;
         private System.Windows.Forms.FontDialog fontDialog1;
+        private System.Windows.Forms.CheckBox checkBoxNBg;
+        private System.Windows.Forms.CheckBox checkBoxRoll;
+        private System.Windows.Forms.Button buttonBacKColor;
+        private System.Windows.Forms.ColorDialog colorDialog1;
+        private System.Windows.Forms.NumericUpDown numericUpDownAutoSafe;
+        private System.Windows.Forms.Button buttonAutoSave;
+        private System.Windows.Forms.NumericUpDown numericUpDownODM;
+        private System.Windows.Forms.CheckBox checkBox1;
+        private System.Windows.Forms.Button buttonSetOrderMax;
     }
 }

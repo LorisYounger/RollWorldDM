@@ -26,7 +26,7 @@ namespace 卷界bili弹幕版
                 this.PluginAuth = "洛里斯杨远";
                 this.PluginName = "卷界 弹幕版";
                 this.PluginCont = "zoujin.admin@exlb.pw";
-                this.PluginVer = "v0.1.1";
+                this.PluginVer = "v0.1.3";
                 this.PluginDesc = "弹幕版养成游戏";
                 frmMain = new FrmMain();
                 frmSetting = new FrmSetting(frmMain);
@@ -142,14 +142,22 @@ namespace 卷界bili弹幕版
         }
         public void OutPutSuper(RichTextBox Outrtf, string text, Color fontcolor, Font font)
         {
-            int lastLenth = richText.TextLength;
-            richText.AppendText(text);
-            richText.Select(lastLenth, text.Length);
-            richText.SelectionColor = fontcolor;
-            richText.SelectionFont = font;
-            Outrtf.Rtf = richText.Rtf;
-            Outrtf.Select(richText.TextLength, 0);
-            Outrtf.ScrollToCaret();
+//#if !DEBUG
+//            try
+//            {
+//#endif
+                int lastLenth = richText.TextLength;
+                richText.AppendText(text);
+                richText.Select(lastLenth, text.Length);
+                richText.SelectionColor = fontcolor;
+                richText.SelectionFont = font;
+                Outrtf.Rtf = richText.Rtf;                
+//#if !DEBUG
+//            }catch(Exception e)
+//            {
+                
+//            }
+//#endif
         }
 
         public static string ColorToHTML(Color Color)

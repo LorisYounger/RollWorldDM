@@ -22,14 +22,16 @@ namespace 卷界bili弹幕版
             InitializeComponent();
             CheckForIllegalCrossThreadCalls = false;//粗暴的干掉线程安全
             TextBox1HP.SetRTF(TextBox1);
-            OutPut("卷界欢迎您!\n使用教程:http://www.exlb.org/rollworlddm/\n");
+            OutPut("卷界欢迎您!\n当前版本B13\n使用教程:http://www.exlb.org/rollworlddm/\nBug反馈:zoujin.admin@exlb.pw\n");
+            timeRels = DateTime.Now.Day;
             LoadGame();
         }
         #region Output
         public void OutPut(string text, Color color, Font font)
         {
             TextBox1HP.OutPutSuper(TextBox1, text, color, font);
-            TextBox1.Select(TextBox1.TextLength - 1, 1);
+            TextBox1.Select(TextBox1.TextLength, 0);
+            TextBox1.ScrollToCaret();
         }
         public void OutPut(string text, Color color)
         {
@@ -44,7 +46,7 @@ namespace 卷界bili弹幕版
         {
             if (HaveUser.Contains(model.UserID))//如果是注册用户
             {
-                User usr = Find(model.UserID);
+                User usr = FindUser(model.UserID);
                 if (!usr.Update)
                 {
                     usr.VipLv = 1 + Convert.ToInt32(model.isVIP) + (Convert.ToInt32(model.isAdmin) + model.UserGuardLevel) * 2;
@@ -62,15 +64,15 @@ namespace 卷界bili弹幕版
                     {
                         JObject staff = JObject.Parse(model.RawData);
                         int gifmon = staff["data"]["price"].ToObject<int>();
-                        usr.Money += gifmon * model.GiftCount;//加钱      
-                        OutPut($"{usr.Name}:使用 {model.GiftName}*{model.GiftCount} 获得了 { gifmon * model.GiftCount} 金钱\n");
+                        usr.Money += (int)(gifmon * 0.1 * model.GiftCount);//加钱      
+                        OutPut($"{usr.Name}:使用 {model.GiftName}*{model.GiftCount} 获得了 {(int)(gifmon * 0.1 * model.GiftCount)} 金钱\n");
                     }
 
 
                 }
                 else if (model.CommentText.Contains("#"))
                 {//简单判断是否使用了指令
-                    if (usr.CanOrder())
+                    if (UserCanOrder(usr))
                     {
                         string[] order = model.CommentText.Trim().Split(' ');
                         switch (order[0])
@@ -85,7 +87,7 @@ namespace 卷界bili弹幕版
                                 {
                                     int gtmoney = rnd.Next(15, (int)(30 * usr.VipBuff() * Buffef()));
                                     UserOnline.Add(model.UserID);
-                                    OutPut(model.UserName + ":签到成功 获得了 了" + gtmoney + "金钱 宠物体力已经恢复\n");
+                                    OutPut(model.UserName + ":签到成功 获得了" + gtmoney + "金钱 宠物体力已经恢复\n");
                                     usr.Money += gtmoney;
                                 }
                                 break;
@@ -102,7 +104,7 @@ namespace 卷界bili弹幕版
                                     gtexp = (int)((rnd.Next(9, 32) * cisu + 1) * 0.1 * Buffef() * usr.VipBuff());
                                     usr.Action -= cisu;
                                     usr.Exp += gtexp;
-                                    OutPut(model.UserName + ":打坐 消耗" + cisu + "点行动值 获得了 了" + gtexp + "点经验值\n");
+                                    OutPut(model.UserName + ":打坐 消耗" + cisu + "点行动值 获得了" + gtexp + "点经验值\n");
                                 }
                                 else
                                 {
@@ -229,22 +231,56 @@ namespace 卷界bili弹幕版
                                     OutPut(model.UserName + ":商店 错误的商店id和数量");
                                 }
                                 break;
+                            case "#tz":
+                            case "#挑战":
+                                if (order.Length == 2)
+                                {
+                                    if (usr.Action > usr.Lv)
+                                    {
+                                        //usr.Action -= usr.Lv;
+                                        OutPut(model.UserName + ":由于挑战模式还在测试中,将不会消耗经历值\n");
+                                        User FitUr;
+                                        if (IsUnsignInt(order[1]))
+                                        {
+                                            FitUr = FindUser(Convert.ToInt32(order[1]));
+                                        }
+                                        else
+                                        {
+                                            FitUr = FindUser(order[1]);
+                                        }
+                                        if (FitUr == null)
+                                        {
+                                            break;
+                                        }
+                                        OutPut(model.UserName + $":挑战{order[1]}战斗开始\n");
+                                        Fight(usr, FitUr);
+                                    }
+                                    else
+                                    {
+                                        OutPut(model.UserName + ":挑战 让你的宠物休息会吧！行动力不足!\n");
+                                    }
+                                }
+                                else
+                                {
+                                    OutPut(model.UserName + ":挑战 错误的挑战参数");
+                                }
+                                break;
                             case "#tx":
                             case "#探险":
                                 if (usr.Action > usr.Lv)
                                 {
-                                    usr.Action -= usr.Lv;
+                                    //usr.Action -= usr.Lv;
                                     int dlv, dhp, dk, df;    //dluck
                                     string dname;
                                     dlv = 1 + rnd.Next((int)(usr.Lv * 0.8), (int)(usr.Lv * 1.3));
-
+                                    OutPut(model.UserName + ":由于探险模式还在测试中,将不会消耗经历值\n");
                                     switch (rnd.Next(0))
                                     {
                                         default:
                                             dname = "怪物";
-                                            dhp = (int)Math.Pow(rnd.Next((int)(dlv * 0.5) + 2, (int)(dlv) + 2), 1.8);
-                                            dk = (int)Math.Pow(rnd.Next((int)(dlv * 0.2) + 2, (int)(dlv * 0.4) + 2), 1.5);
-                                            df = (int)Math.Pow(rnd.Next((int)(dlv * 0.1) + 2, (int)(dlv * 0.2) + 2), 1.4);
+                                            dhp = rnd.Next((int)(dlv * 0.5) + 2, (int)(dlv) + 2);
+                                            dk = rnd.Next((int)(dlv * 0.2) + 2, (int)(dlv * 0.4) + 2);
+                                            df = rnd.Next((int)(dlv * 0.1) + 2, (int)(dlv * 0.2) + 2);
                                             break;
                                     }
 
@@ -376,9 +412,11 @@ namespace 卷界bili弹幕版
                     users.Add(new User(model.UserID));
                     OutPut(model.UserName + ":注册成功\n");
                 }
+               
             }
+            //准备做个自动回复
         }
-        public User Find(int Uid)
+        public User FindUser(int Uid)
         {
             foreach (User usr in users)
             {
@@ -387,15 +425,28 @@ namespace 卷界bili弹幕版
                     return usr;
                 }
             }
-#if DEBUG
             return null;
-#else
-            return new User(Uid);//这个只是用来防止出BUG用的
-#endif
+        }
+        public User FindUser(string UName)
+        {
+            foreach (User usr in users)
+            {
+                if (usr.Name == UName)
+                {
+                    return usr;
+                }
+            }
+            return null;
         }
         public double TrueValue(double value)//增加战斗随机性的数值
         {
             return rnd.Next((int)(value * 9), (int)(value * 11)) * 0.1;
+        }
+        public int CanUserOrderMax = 100;
+        public bool UserCanOrder(User usr)
+        {
+            usr.OrderMax++;
+            return usr.OrderMax < CanUserOrderMax;
         }
         public int Fight(User usr1, User usr2)//战斗 返回的是玩家1的得分，通过得分判断获得礼包
         {
@@ -583,28 +634,52 @@ namespace 卷界bili弹幕版
         {
             return 1 + Buff * 0.05;
         }
+        int timeRels;
         private void timer1_Tick(object sender, EventArgs e)
         {
-            //每0.1小时进行一次存档备份
+            //每? 0.1小时进行一次存档备份
             SaveGame();
+            //判断有没有过一天
+            if (timeRels != DateTime.Now.Day)
+            {
+                RelsUser();
+            }
         }
         public void SaveGame()//保存用户数据
         {//Environment.CurrentDirectory 
-            DirectoryInfo SavePath = new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + @"\LBSoft\RWdm");
-            if (!SavePath.Exists)
+#if !DEBUG
+            int Reload = 0;
+        RES:
+            try
             {
-                SavePath.Create();
+#endif
+                DirectoryInfo SavePath = new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + @"\LBSoft\RWdm");
+                if (!SavePath.Exists)
+                {
+                    SavePath.Create();
+                }
+                FileInfo SaveFile = new FileInfo(SavePath.FullName + @"\gsave.rwd");
+                FileStream fs = SaveFile.Create();
+                StringBuilder sb = new StringBuilder();
+                foreach (User usr in users)
+                {
+                    sb.Append(usr.Data() + "\r\n");
+                }
+                byte[] wwrite = Encoding.UTF8.GetBytes(sb.ToString());
+                fs.Write(wwrite, 0, wwrite.Length);
+                fs.Close();
+#if !DEBUG
             }
-            FileInfo SaveFile = new FileInfo(SavePath.FullName + @"\gsave.rwd");
-            FileStream fs = SaveFile.Create();
-            StringBuilder sb = new StringBuilder();
-            foreach (User usr in users)
+            catch (Exception e)
             {
-                sb.Append(usr.Data() + "\r\n");
+                if (Reload >= 10)
+                {
+                    OutPut(e.ToString(), Color.Red);
+                }
+                Reload += 1;
+                goto RES;
             }
-            byte[] wwrite = Encoding.UTF8.GetBytes(sb.ToString());
-            fs.Write(wwrite, 0, wwrite.Length);
-            fs.Close();
+#endif
         }
         public void LoadGame()
         {//清理旧数据
@@ -631,7 +706,13 @@ namespace 卷界bili弹幕版
             OutPut($"存档加载完成{readth.Length}\n");
         }
 
-
+        public void RelsUser()
+        {
+            foreach (User usr in users)
+            {
+                usr.OrderMax = 0;
+            }
+        }
 
         //一些辅助的方法
         public static bool IsNumeric(string value)
@@ -715,6 +796,7 @@ namespace 卷界bili弹幕版
         public User(int uid)//注册
         {
             Uid = uid;
+            Name = uid.ToString();
             Money = 100;
             Exp = 0;
             Lv = 1;
@@ -748,6 +830,7 @@ namespace 卷界bili弹幕版
         {
             string[] tmps = Loadinfo.Split('|');
             Uid = Convert.ToInt32(tmps[0]);
+            Name = tmps[0];
             Money = Convert.ToInt32(tmps[1]);
             Exp = Convert.ToInt32(tmps[2]);
             Lv = Convert.ToInt32(tmps[3]);
@@ -781,11 +864,6 @@ namespace 卷界bili弹幕版
         }
         #endregion
 
-        public bool CanOrder()
-        {
-            OrderMax++;
-            return OrderMax < 100;
-        }
         public double VipBuff()//VIP会获得BUFF
         {
             return (3 + VipLv) * 0.25;

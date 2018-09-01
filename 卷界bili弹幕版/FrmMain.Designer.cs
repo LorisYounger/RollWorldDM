@@ -42,6 +42,7 @@
             this.TextBox1.Location = new System.Drawing.Point(0, 0);
             this.TextBox1.Name = "TextBox1";
             this.TextBox1.ReadOnly = true;
+            this.TextBox1.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.None;
             this.TextBox1.Size = new System.Drawing.Size(809, 508);
             this.TextBox1.TabIndex = 0;
             this.TextBox1.Text = "";
@@ -69,7 +70,7 @@
         }
 
         #endregion
-        private System.Windows.Forms.Timer timer1;
         public System.Windows.Forms.RichTextBox TextBox1;
+        public System.Windows.Forms.Timer timer1;
     }
 }

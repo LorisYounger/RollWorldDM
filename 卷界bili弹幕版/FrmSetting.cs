@@ -71,5 +71,43 @@ namespace 卷界bili弹幕版
                 frmMain.TextBox1HP.SetRTF(frmMain.TextBox1);
             }
         }
+
+        private void checkBoxNBg_CheckedChanged(object sender, EventArgs e)
+        {
+            frmMain.TransparencyKey = frmMain.TextBox1.BackColor;
+        }
+
+        private void buttonBacKColor_Click(object sender, EventArgs e)
+        {
+            colorDialog1.Color = frmMain.TextBox1.BackColor;
+            if (colorDialog1.ShowDialog() == DialogResult.OK)
+            {
+                frmMain.TextBox1.BackColor = colorDialog1.Color;
+            }
+        }
+
+        private void checkBox1_CheckedChanged(object sender, EventArgs e)
+        {
+            if (checkBoxRoll.Checked)
+            {
+                frmMain.TextBox1.ScrollBars = RichTextBoxScrollBars.Both;
+            }
+            else
+            {
+                frmMain.TextBox1.ScrollBars = RichTextBoxScrollBars.None;
+            }
+        }
+
+        private void buttonAutoSave_Click(object sender, EventArgs e)
+        {
+            frmMain.timer1.Interval = Convert.ToInt32(numericUpDownAutoSafe.Value * 1000);
+            MessageBox.Show("设置成功");
+        }
+
+        private void buttonSetOrderMax_Click(object sender, EventArgs e)
+        {
+            frmMain.CanUserOrderMax = Convert.ToInt32(numericUpDownODM.Value);
+            MessageBox.Show("设置成功");
+        }
     }
 }
