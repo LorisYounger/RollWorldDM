@@ -639,6 +639,15 @@ namespace 卷界bili弹幕版
         {
             //每? 0.1小时进行一次存档备份
             SaveGame();
+            //清空文本//防止输出文本超过上限导致溢出
+            if (TextBox1.TextLength>= 214748364)
+            {
+                TextBox1.Text = TextBox1.Text.Substring(214746364);
+                TextBox1HP.SetRTF(TextBox1);
+                TextBox1.Select(TextBox1.TextLength, 0);
+                TextBox1.ScrollToCaret();
+            }
+
             //判断有没有过一天
             if (timeRels != DateTime.Now.Day)
             {

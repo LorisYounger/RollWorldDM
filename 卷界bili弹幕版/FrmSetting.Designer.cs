@@ -46,6 +46,7 @@
             this.numericUpDownODM = new System.Windows.Forms.NumericUpDown();
             this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.buttonSetOrderMax = new System.Windows.Forms.Button();
+            this.checkBox2 = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownAutoSafe)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownODM)).BeginInit();
             this.SuspendLayout();
@@ -232,7 +233,7 @@
             // 
             this.checkBox1.AutoSize = true;
             this.checkBox1.Enabled = false;
-            this.checkBox1.Location = new System.Drawing.Point(318, 63);
+            this.checkBox1.Location = new System.Drawing.Point(318, 58);
             this.checkBox1.Name = "checkBox1";
             this.checkBox1.Size = new System.Drawing.Size(108, 28);
             this.checkBox1.TabIndex = 14;
@@ -249,11 +250,22 @@
             this.buttonSetOrderMax.UseVisualStyleBackColor = true;
             this.buttonSetOrderMax.Click += new System.EventHandler(this.buttonSetOrderMax_Click);
             // 
+            // checkBox2
+            // 
+            this.checkBox2.AutoSize = true;
+            this.checkBox2.Location = new System.Drawing.Point(318, 83);
+            this.checkBox2.Name = "checkBox2";
+            this.checkBox2.Size = new System.Drawing.Size(84, 16);
+            this.checkBox2.TabIndex = 16;
+            this.checkBox2.Text = "隐藏操作栏";
+            this.checkBox2.UseVisualStyleBackColor = true;
+            // 
             // FrmSetting
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(425, 160);
+            this.ClientSize = new System.Drawing.Size(425, 156);
+            this.Controls.Add(this.checkBox2);
             this.Controls.Add(this.buttonSetOrderMax);
             this.Controls.Add(this.checkBox1);
             this.Controls.Add(this.numericUpDownODM);
@@ -301,5 +313,6 @@
         private System.Windows.Forms.NumericUpDown numericUpDownODM;
         private System.Windows.Forms.CheckBox checkBox1;
         private System.Windows.Forms.Button buttonSetOrderMax;
+        private System.Windows.Forms.CheckBox checkBox2;
     }
 }
