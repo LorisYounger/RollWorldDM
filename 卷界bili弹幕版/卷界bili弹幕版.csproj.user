@@ -4,4 +4,7 @@
     <StartAction>Program</StartAction>
     <StartProgram>C:\Users\Zou Jin\AppData\Local\Apps\2.0\5BL6VV7K.N7X\KPRHNTZY.T7Z\bili..tion_214ad496f5ff1db0_0001.0000_45965d8b13c26220\Bililive_dm.exe</StartProgram>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
+    <StartAction>Project</StartAction>
+  </PropertyGroup>
 </Project>

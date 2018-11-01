@@ -8,3 +8,4 @@ C:\Users\Zou Jin\Documents\Visual Studio 2017\Projects\卷界bili弹幕版\卷�
 C:\Users\Zou Jin\Documents\Visual Studio 2017\Projects\卷界bili弹幕版\卷界bili弹幕版\obj\Debug\卷界bili弹幕版.pdb
 C:\Users\Zou Jin\Documents\弹幕姬\Plugins\卷界bili弹幕版.pdb
 C:\Users\Zou Jin\Documents\Visual Studio 2017\Projects\卷界bili弹幕版\卷界bili弹幕版\obj\Debug\卷界bili弹幕版.csproj.CopyComplete
+C:\Users\Zou Jin\Documents\弹幕姬\Plugins\卷界bili弹幕版.dll.config

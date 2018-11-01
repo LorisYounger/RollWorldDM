@@ -26,7 +26,7 @@ namespace 卷界bili弹幕版
                 this.PluginAuth = "洛里斯杨远";
                 this.PluginName = "卷界 弹幕版";
                 this.PluginCont = "zoujin.admin@exlb.pw";
-                this.PluginVer = "v0.1.3";
+                this.PluginVer = "v0.1.5";
                 this.PluginDesc = "弹幕版养成游戏";
                 frmMain = new FrmMain();
                 frmSetting = new FrmSetting(frmMain);

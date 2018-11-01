@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using Newtonsoft.Json.Linq;
@@ -13,7 +14,6 @@ namespace 卷界bili弹幕版
     {
         public RtfHelper TextBox1HP = new RtfHelper();
         public List<User> users = new List<User>();
-        public List<int> HaveUser = new List<int>();//用来快速判断是否有这个用户
         public List<int> UserOnline = new List<int>();//用来快速判断 用户是否签到
         public Random rnd = new Random();
         public int Buff = 0;//全局BUF 获得了 经验值等奖励 根据在线人数获得
@@ -21,21 +21,134 @@ namespace 卷界bili弹幕版
         {
             InitializeComponent();
             CheckForIllegalCrossThreadCalls = false;//粗暴的干掉线程安全
+
+            TextBox1.BackColor = Properties.Settings.Default.BackColor;
+            TextBox1.Font = Properties.Settings.Default.MainFont;
+            if (Properties.Settings.Default.IsTranspare)
+                TransparencyKey = TextBox1.BackColor;
+
+            TXTOut.Add("");//默认有首行且为空
+
+
             TextBox1HP.SetRTF(TextBox1);
-            OutPut("卷界欢迎您!\n当前版本B13\n使用教程:http://www.exlb.org/rollworlddm/\nBug反馈:zoujin.admin@exlb.pw\n");
+            OutPut("卷界欢迎您!\n当前版本B15\n使用教程:http://www.exlb.org/rollworlddm/\nBug反馈:zoujin.admin@exlb.pw\n");
             timeRels = DateTime.Now.Day;
             LoadGame();
         }
+        //
+
         #region Output
+        //output需要使用记录
+        List<string> TXTOut = new List<string>();
+        //Environment.SpecialFolder.ApplicationData + @"\LBSoft\RWdm\output.txt"
+        //public bool IsTXTOut = false;
+        public void TXTOutput(string text)
+        {
+            AddInTXT(text);
+            if (TXTOut.Count > Properties.Settings.Default.TxtLine + 1)
+            {
+                for (int i = TXTOut.Count - Properties.Settings.Default.TxtLine; i > 1; i--)
+                {
+                    TXTOut.RemoveAt(0);
+                }
+            }
+            //开始保存文件
+            try//如果文件被堵就等下次再写
+            {
+                FileInfo output = new FileInfo(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + @"\LBSoft\RWdm\output.txt");
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < TXTOut.Count - 1; i++)
+                {
+                    sb.Append(TXTOut[i] + "\r\n");
+                }
+                sb.Append(TXTOut[TXTOut.Count - 1]);
+                byte[] wwrite = Encoding.UTF8.GetBytes(sb.ToString());
+                FileStream fs = output.Create();
+                fs.Write(wwrite, 0, wwrite.Length);
+                fs.Close();
+            }
+            catch
+            {
+
+            }
+        }
+        public void AddInTXT(string text)
+        {
+            int oldlen = TXTOut.Count - 1;//记录现在的TXTOUT的长度
+            if (!text.Contains("\n"))//如果没有换行
+            {
+                TXTOut[TXTOut.Count - 1] += text;
+            }
+            else
+            {
+                string[] tmps = text.Split('\n');
+                TXTOut[TXTOut.Count - 1] += tmps[0];
+                for (int i = 1; i < tmps.Length; i++)
+                {
+                    TXTOut.Add(tmps[i]);
+                }
+            }
+            string tmp;
+            for (int i = TXTOut.Count - 1; i < TXTOut.Count; i++)
+            {
+                if (System.Text.Encoding.ASCII.GetBytes(TXTOut[i]).Length > Properties.Settings.Default.Txtwide)
+                {
+                    tmp = TXTOut[i];
+                    TXTOut[i] = getStr(tmp, Properties.Settings.Default.Txtwide);
+                    TXTOut.Insert(i + 1, tmp.Substring(TXTOut[i].Length));
+                }
+            }
+        }
+        /// <summary>
+        /// 截取文本，区分中英文字符，中文算两个长度，英文算一个长度，截取后增加...，占3个长度(包括在限制长度内)
+        /// </summary>
+        /// <param name="s"></param>
+        /// <param name="l">不小于3</param>
+        /// <returns></returns>
+        public static string getStr(string s, int l)
+        {
+            string temp = s.Substring(0, (s.Length < l + 1) ? s.Length : l + 1);
+            byte[] encodedBytes = System.Text.ASCIIEncoding.ASCII.GetBytes(temp);
+
+            string outputStr = "";
+            int count = 0;
+
+            for (int i = 0; i < temp.Length; i++)
+            {
+                if ((int)encodedBytes[i] == 63)
+                    count += 2;
+                else
+                    count += 1;
+
+                if (count <= l)
+                    outputStr += temp.Substring(i, 1);
+                else if (count > l)
+                    break;
+            }
+
+            if (count <= l)
+            {
+                outputStr = temp;
+            }
+            return outputStr;
+        }
         public void OutPut(string text, Color color, Font font)
         {
             TextBox1HP.OutPutSuper(TextBox1, text, color, font);
             TextBox1.Select(TextBox1.TextLength, 0);
             TextBox1.ScrollToCaret();
+            if (Properties.Settings.Default.IsTXTOut)
+                TXTOutput(text);
         }
         public void OutPut(string text, Color color)
         {
             OutPut(text, color, TextBox1.Font);
+        }
+        public void OutPutAppend(string text, Color color, Font font)
+        {
+            TextBox1HP.AppendText(text, color, font);
+            if (Properties.Settings.Default.IsTXTOut)
+                AddInTXT(text);
         }
         public void OutPut(string text)
         {
@@ -44,9 +157,9 @@ namespace 卷界bili弹幕版
         #endregion
         public void Order(BilibiliDM_PluginFramework.DanmakuModel model)
         {
-            if (HaveUser.Contains(model.UserID))//如果是注册用户
+            if (users.FirstOrDefault(x => x.Uid == model.UserID) != null)//如果是注册用户
             {
-                User usr = FindUser(model.UserID);
+                User usr = users.FirstOrDefault(x => x.Uid == model.UserID);
                 if (!usr.Update)
                 {
                     usr.VipLv = 1 + Convert.ToInt32(model.isVIP) + (Convert.ToInt32(model.isAdmin) + model.UserGuardLevel) * 2;
@@ -113,15 +226,15 @@ namespace 卷界bili弹幕版
                                 break;
                             case "#xx":
                             case "#信息":
-                                TextBox1HP.AppendText(model.UserName + ":金币", Color.Black, TextBox1.Font);
-                                TextBox1HP.AppendText(usr.Money.ToString(), Color.Blue, new Font(TextBox1.Font, FontStyle.Bold));
-                                TextBox1HP.AppendText(" Lv ", Color.Black, TextBox1.Font);
-                                TextBox1HP.AppendText(usr.Lv.ToString(), Color.Blue, new Font(TextBox1.Font, FontStyle.Bold));
-                                TextBox1HP.AppendText(" (" + intToRoman(Convert.ToInt32(Math.Sqrt(usr.Lv))) + ')' + " Exp ", Color.Black, TextBox1.Font);
-                                TextBox1HP.AppendText(usr.Exp.ToString(), Color.Blue, new Font(TextBox1.Font, FontStyle.Bold));
-                                TextBox1HP.AppendText("/" + usr.Lv * 2 + " HP/攻/防 ", Color.Black, TextBox1.Font);
-                                TextBox1HP.AppendText(usr.HPMax().ToString() + '/' + usr.Attact() + '/' + usr.Defense(), Color.Blue, new Font(TextBox1.Font, FontStyle.Bold));
-                                TextBox1HP.AppendText(" 行动值 ", Color.Black, TextBox1.Font);
+                                OutPutAppend(model.UserName + ":金币", Color.Black, TextBox1.Font);
+                                OutPutAppend(usr.Money.ToString(), Color.Blue, new Font(TextBox1.Font, FontStyle.Bold));
+                                OutPutAppend(" Lv ", Color.Black, TextBox1.Font);
+                                OutPutAppend(usr.Lv.ToString(), Color.Blue, new Font(TextBox1.Font, FontStyle.Bold));
+                                OutPutAppend(" (" + intToRoman(Convert.ToInt32(Math.Sqrt(usr.Lv))) + ')' + " Exp ", Color.Black, TextBox1.Font);
+                                OutPutAppend(usr.Exp.ToString(), Color.Blue, new Font(TextBox1.Font, FontStyle.Bold));
+                                OutPutAppend("/" + usr.Lv * 2 + " HP/攻/防 ", Color.Black, TextBox1.Font);
+                                OutPutAppend(usr.HPMax().ToString() + '/' + usr.Attact() + '/' + usr.Defense(), Color.Blue, new Font(TextBox1.Font, FontStyle.Bold));
+                                OutPutAppend(" 行动值 ", Color.Black, TextBox1.Font);
                                 OutPut(usr.Action.ToString() + '/' + usr.ActionMax() + '\n', Color.Blue, new Font(TextBox1.Font, FontStyle.Bold));
                                 break;
                             case "#xj":
@@ -242,11 +355,11 @@ namespace 卷界bili弹幕版
                                         User FitUr;
                                         if (IsUnsignInt(order[1]))
                                         {
-                                            FitUr = FindUser(Convert.ToInt32(order[1]));
+                                            FitUr = users.FirstOrDefault(x => x.Uid == (Convert.ToInt32(order[1])));
                                         }
                                         else
                                         {
-                                            FitUr = FindUser(order[1]);
+                                            FitUr = users.FirstOrDefault(x => x.Name == order[1]);
                                         }
                                         if (FitUr == null)
                                         {
@@ -265,133 +378,133 @@ namespace 卷界bili弹幕版
                                     OutPut(model.UserName + ":挑战 错误的挑战参数");
                                 }
                                 break;
-                            case "#tx":
-                            case "#探险":
-                                if (usr.Action > usr.Lv)
-                                {
-                                    //usr.Action -= usr.Lv;
-                                    int dlv, dhp, dk, df;    //dluck
-                                    string dname;
-                                    dlv = 1 + rnd.Next((int)(usr.Lv * 0.8), (int)(usr.Lv * 1.3));
-                                    OutPut(model.UserName + ":由于探险模式还在测试中,将不会消耗经历值\n");
-                                    switch (rnd.Next(0))
-                                    {
-                                        default:
-                                            dname = "怪物";
-                                            dhp = rnd.Next((int)(dlv * 0.5) + 2, (int)(dlv) + 2);
-                                            dk = rnd.Next((int)(dlv * 0.2) + 2, (int)(dlv * 0.4) + 2);
-                                            df = rnd.Next((int)(dlv * 0.1) + 2, (int)(dlv * 0.2) + 2);
-                                            break;
-                                    }
+                            //case "#tx":
+                            //case "#探险":
+                            //    if (usr.Action > usr.Lv)
+                            //    {
+                            //        //usr.Action -= usr.Lv;
+                            //        int dlv, dhp, dk, df;    //dluck
+                            //        string dname;
+                            //        dlv = 1 + rnd.Next((int)(usr.Lv * 0.8), (int)(usr.Lv * 1.3));
+                            //        OutPut(model.UserName + ":由于探险模式还在测试中,将不会消耗经历值\n");
+                            //        switch (rnd.Next(0))
+                            //        {
+                            //            default:
+                            //                dname = "怪物";
+                            //                dhp = rnd.Next((int)(dlv * 0.5) + 2, (int)(dlv) + 2);
+                            //                dk = rnd.Next((int)(dlv * 0.2) + 2, (int)(dlv * 0.4) + 2);
+                            //                df = rnd.Next((int)(dlv * 0.1) + 2, (int)(dlv * 0.2) + 2);
+                            //                break;
+                            //        }
 
-                                    //                                Case 1
+                            //        //                                Case 1
 
-                                    //        dname = "怪物"
+                            //        //        dname = "怪物"
 
-                                    //        dhp = int((dlv * (rnd + 0.5)) ^ 1.8 + 5)
+                            //        //        dhp = int((dlv * (rnd + 0.5)) ^ 1.8 + 5)
 
-                                    //        dk = int((dlv * (rnd * 0.4 + 0.5)) ^ 1.5 * 10) * 0.1
+                            //        //        dk = int((dlv * (rnd * 0.4 + 0.5)) ^ 1.5 * 10) * 0.1
 
-                                    //        df = int((dlv * (rnd * 0.2 + 0.25)) ^ 1.4 * 10) * 0.1
+                            //        //        df = int((dlv * (rnd * 0.2 + 0.25)) ^ 1.4 * 10) * 0.1
 
-                                    //    Case 2
+                            //        //    Case 2
 
-                                    //        dname = "强盗"
+                            //        //        dname = "强盗"
 
-                                    //        dhp = int((dlv * (rnd * 0.5 + 0.5)) ^ 1.8 + 5)
+                            //        //        dhp = int((dlv * (rnd * 0.5 + 0.5)) ^ 1.8 + 5)
 
-                                    //        dk = int((dlv * (rnd * 0.75 + 0.5)) ^ 1.5 * 10) * 0.1
+                            //        //        dk = int((dlv * (rnd * 0.75 + 0.5)) ^ 1.5 * 10) * 0.1
 
-                                    //        df = int((dlv * (rnd * 0.25 + 0.25)) ^ 1.4 * 10) * 0.1
+                            //        //        df = int((dlv * (rnd * 0.25 + 0.25)) ^ 1.4 * 10) * 0.1
 
-                                    //    Case 3
+                            //        //    Case 3
 
-                                    //        dname = "森之妖精"
+                            //        //        dname = "森之妖精"
 
-                                    //        dhp = int((dlv * (rnd + 1.5)) ^ 1.8 + 5)
+                            //        //        dhp = int((dlv * (rnd + 1.5)) ^ 1.8 + 5)
 
-                                    //        dk = int((dlv * (rnd * 0.4 + 0.5)) ^ 1.5 * 10) * 0.1
+                            //        //        dk = int((dlv * (rnd * 0.4 + 0.5)) ^ 1.5 * 10) * 0.1
 
-                                    //        df = int((dlv * (rnd * 0.2 + 0.25)) ^ 1.4 * 10) * 0.1
+                            //        //        df = int((dlv * (rnd * 0.2 + 0.25)) ^ 1.4 * 10) * 0.1
 
-                                    //    Case 4
+                            //        //    Case 4
 
-                                    //        dname = "壬辰酱"
+                            //        //        dname = "壬辰酱"
 
-                                    //        dhp = int((dlv * (rnd * 0.5 + 0.75)) ^ 1.8 + 5)
+                            //        //        dhp = int((dlv * (rnd * 0.5 + 0.75)) ^ 1.8 + 5)
 
-                                    //        dk = int((dlv * (rnd * 0.5 + 0.75)) ^ 1.5 * 10) * 0.1
+                            //        //        dk = int((dlv * (rnd * 0.5 + 0.75)) ^ 1.5 * 10) * 0.1
 
-                                    //        df = int((dlv * (rnd * 0.5 + 0.5)) ^ 1.4 * 10) * 0.1
+                            //        //        df = int((dlv * (rnd * 0.5 + 0.5)) ^ 1.4 * 10) * 0.1
 
-                                    //    Case 5
+                            //        //    Case 5
 
-                                    //        dlv = int(dlv * 1.2)
+                            //        //        dlv = int(dlv * 1.2)
 
-                                    //        dname = "王司徒"
+                            //        //        dname = "王司徒"
 
-                                    //        dhp = int((dlv * (rnd * 0.5 + 0.75)) ^ 1.8 + 5)
+                            //        //        dhp = int((dlv * (rnd * 0.5 + 0.75)) ^ 1.8 + 5)
 
-                                    //        dk = int((dlv * (rnd * 0.5 + 0.6)) ^ 1.5 * 10) * 0.1
+                            //        //        dk = int((dlv * (rnd * 0.5 + 0.6)) ^ 1.5 * 10) * 0.1
 
-                                    //        df = int((dlv * (rnd * 0.4 + 0.25)) ^ 1.4 * 10) * 0.1
+                            //        //        df = int((dlv * (rnd * 0.4 + 0.25)) ^ 1.4 * 10) * 0.1
 
-                                    //    Case 6
+                            //        //    Case 6
 
-                                    //        dlv = int(dlv * 1.2)
+                            //        //        dlv = int(dlv * 1.2)
 
-                                    //        dname = "河蟹神兽"
+                            //        //        dname = "河蟹神兽"
 
-                                    //        dhp = int((dlv * (rnd * 0.5 + 0.5)) ^ 1.8 + 5)
+                            //        //        dhp = int((dlv * (rnd * 0.5 + 0.5)) ^ 1.8 + 5)
 
-                                    //        dk = int((dlv * (rnd * 0.5 + 0.5)) ^ 1.5 * 10) * 0.1
+                            //        //        dk = int((dlv * (rnd * 0.5 + 0.5)) ^ 1.5 * 10) * 0.1
 
-                                    //        df = int((dlv * (rnd * 0.5 + 0.5)) ^ 1.4 * 10) * 0.1
+                            //        //        df = int((dlv * (rnd * 0.5 + 0.5)) ^ 1.4 * 10) * 0.1
 
-                                    //    Case Else
+                            //        //    Case Else
 
-                                    //        '直接结算探险结束
+                            //        //        '直接结算探险结束
 
-                                    //        BBS.Alert"探险完成，" & RndPrice(int(1 + Interest(4) * 0.25) * 0.5),"?"
+                            //        //        BBS.Alert"探险完成，" & RndPrice(int(1 + Interest(4) * 0.25) * 0.5),"?"
 
-                                    //        Exit Sub
+                            //        //        Exit Sub
 
-                                    //End Select
-                                    switch ((int)(Math.Sqrt(dlv) * 0.5))
-                                    {
-                                        case 0:
-                                            dname = "实习" + dname;
-                                            break;
-                                        case 1:
-                                            dname = "试用" + dname;
-                                            break;
-                                        case 2:
-                                            dname = "助理" + dname;
-                                            break;
-                                        case 3:
-                                            dname = "白银" + dname;
-                                            break;
-                                        case 4:
-                                            dname = "黄金" + dname;
-                                            break;
-                                        case 5:
-                                            dname = "白金" + dname;
-                                            break;
-                                        case 6:
-                                            dname = "钻石" + dname;
-                                            break;
-                                        default:
-                                            dname = intToRoman((int)(Math.Sqrt(dlv) * 0.5)) + "级" + dname;
-                                            break;
-                                    }
-                                    OutPut(model.UserName + $":探险 偶遇{dname} 战斗开始\n");
-                                    Fight(usr, new User(dname, dlv, dhp, df, dk));
-                                }
-                                else
-                                {
-                                    OutPut(model.UserName + ":探险 让你的宠物休息会吧！行动力不足!\n");
-                                }
-                                break;
+                            //        //End Select
+                            //        switch ((int)(Math.Sqrt(dlv) * 0.5))
+                            //        {
+                            //            case 0:
+                            //                dname = "实习" + dname;
+                            //                break;
+                            //            case 1:
+                            //                dname = "试用" + dname;
+                            //                break;
+                            //            case 2:
+                            //                dname = "助理" + dname;
+                            //                break;
+                            //            case 3:
+                            //                dname = "白银" + dname;
+                            //                break;
+                            //            case 4:
+                            //                dname = "黄金" + dname;
+                            //                break;
+                            //            case 5:
+                            //                dname = "白金" + dname;
+                            //                break;
+                            //            case 6:
+                            //                dname = "钻石" + dname;
+                            //                break;
+                            //            default:
+                            //                dname = intToRoman((int)(Math.Sqrt(dlv) * 0.5)) + "级" + dname;
+                            //                break;
+                            //        }
+                            //        OutPut(model.UserName + $":探险 偶遇{dname} 战斗开始\n");
+                            //        Fight(usr, new User(dname, dlv, dhp, df, dk));
+                            //    }
+                            //    else
+                            //    {
+                            //        OutPut(model.UserName + ":探险 让你的宠物休息会吧！行动力不足!\n");
+                            //    }
+                            //    break;
                             default:
                                 OutPut(model.UserName + ":错误的指令参数,找不到指令'" + order[0] + "'\n");
                                 break;
@@ -408,99 +521,95 @@ namespace 卷界bili弹幕版
             {//如果没有注册
                 if (model.CommentText == "#注册")
                 {
-                    HaveUser.Add(model.UserID);
                     users.Add(new User(model.UserID));
                     OutPut(model.UserName + ":注册成功\n");
                 }
-               
+
             }
             //准备做个自动回复
-        }
-        public User FindUser(int Uid)
-        {
-            foreach (User usr in users)
-            {
-                if (usr.Uid == Uid)
-                {
-                    return usr;
-                }
-            }
-            return null;
-        }
-        public User FindUser(string UName)
-        {
-            foreach (User usr in users)
-            {
-                if (usr.Name == UName)
-                {
-                    return usr;
-                }
-            }
-            return null;
-        }
+        }       
+        
         public double TrueValue(double value)//增加战斗随机性的数值
         {
             return rnd.Next((int)(value * 9), (int)(value * 11)) * 0.1;
         }
-        public int CanUserOrderMax = 100;
+
         public bool UserCanOrder(User usr)
         {
             usr.OrderMax++;
-            return usr.OrderMax < CanUserOrderMax;
+            return usr.OrderMax < Properties.Settings.Default.CanUserOrderMax;
         }
         public int Fight(User usr1, User usr2)//战斗 返回的是玩家1的得分，通过得分判断获得礼包
         {
             double[] USK = new double[2];//玩家造成的伤害
             int[] USpesn = new int[2];//对方造成的伤害所占hp百分比
             USK[0] = TrueValue(usr1.Attact()) - TrueValue(usr2.Defense());//玩家1造成的伤害=攻击力-敌方防御力
-            USK[1] = TrueValue(usr2.Attact()) - TrueValue(usr1.Defense());//玩家1造成的伤害=攻击力-敌方防御力
+            USK[1] = TrueValue(usr2.Attact()) - TrueValue(usr1.Defense());//玩家2造成的伤害=攻击力-敌方防御力
 
-            USpesn[0] = (int)(USK[1] / usr1.HPMax() * 1000);
-            USpesn[1] = (int)(USK[0] / usr1.HPMax() * 1000);
+            if (USK[0] < 0)
+                USK[0] = 0;
+            if (USK[1] < 0)
+                USK[1] = 0;
 
-            TextBox1HP.AppendText($"{usr1.Name}对{usr2.Name}造成", Color.Black, TextBox1.Font);
-            TextBox1HP.AppendText($"{USK[0]}({USpesn[0] * 0.1}%)", Color.Red, new Font(TextBox1.Font, FontStyle.Bold));
-            TextBox1HP.AppendText($"的伤害，{usr2.Name}对{usr1.Name}造成", Color.Black, TextBox1.Font);
-            TextBox1HP.AppendText($"{USK[1]}({USpesn[1] * 0.1}%)", Color.Red, new Font(TextBox1.Font, FontStyle.Bold));
-            TextBox1HP.AppendText($"的伤害\n战斗结束:", Color.Black, TextBox1.Font);
+            USpesn[0] = (int)(USK[0] / usr2.HPMax() * 1000);
+            USpesn[1] = (int)(USK[1] / usr1.HPMax() * 1000);
 
-            bool IsWiner = false;
+            OutPutAppend($"{usr1.Name}对{usr2.Name}造成", Color.Black, TextBox1.Font);
+            OutPutAppend($"{USK[0]}({USpesn[0] * 0.1}%)", Color.Red, new Font(TextBox1.Font, FontStyle.Bold));
+            OutPutAppend($"的伤害，{usr2.Name}对{usr1.Name}造成", Color.Black, TextBox1.Font);
+            OutPutAppend($"{USK[1]}({USpesn[1] * 0.1}%)", Color.Red, new Font(TextBox1.Font, FontStyle.Bold));
+            OutPutAppend($"的伤害\n战斗结束:", Color.Black, TextBox1.Font);            
 
+            //战斗评分
+            int finsco = 5;
             int hhs;//所用回合数
+            bool IsWiner = false;//赢了没
 
             if (USpesn[0] < USpesn[1])
             {//usr1输了
-                TextBox1HP.AppendText(usr2.Name, Color.Goldenrod, new Font(TextBox1.Font, FontStyle.Bold));
-                TextBox1HP.AppendText("获得最终胜利 战斗评分:", Color.Black, TextBox1.Font);
+                finsco--;//输了减1分
+                OutPutAppend(usr2.Name, Color.Goldenrod, new Font(TextBox1.Font, FontStyle.Bold));
+                OutPutAppend("获得最终胜利 战斗评分:", Color.Black, TextBox1.Font);
                 hhs = Convert.ToInt32(1000 / USpesn[1]);
             }
             else
             {//usr1赢了
+                finsco += 2;//赢了+2分
                 IsWiner = true;
-                TextBox1HP.AppendText(usr1.Name, Color.Goldenrod, new Font(TextBox1.Font, FontStyle.Bold));
-                TextBox1HP.AppendText("获得最终胜利 战斗评分:", Color.Black, TextBox1.Font);
+                OutPutAppend(usr1.Name, Color.Goldenrod, new Font(TextBox1.Font, FontStyle.Bold));
+                OutPutAppend("获得最终胜利 战斗评分:", Color.Black, TextBox1.Font);
                 hhs = Convert.ToInt32(1000 / USpesn[0]);
             }
-
-            bool IsNoGood = true; //判断是不是逆风局
 
             int fsc = usr2.TotalFight() - usr1.TotalFight();//计算分数差
 
             if (fsc < 0)//顺丰
             {
-                IsNoGood = false;
-                fsc = -fsc;//确保fsc为正 因为要开更
+                fsc = Convert.ToInt32(Math.Pow(-fsc, 0.25));//顺丰分数差为负分
+                if (IsWiner)
+                    finsco -= fsc;//如果顺丰胜利，减少点分数
+                else
+                    finsco -= fsc * 2;//如果顺丰失败，减少更多分数
             }
-            fsc = (int)Math.Sqrt(fsc);
-
-            if (!IsNoGood)//顺丰
+            else//逆风
             {
-                fsc = -fsc;//确保fsc为负数 因为这些分数需要删除
-                hhs = -hhs;
+                fsc = Convert.ToInt32(Math.Pow(fsc, 0.25));//逆风+胜利 分数差为加分
+
+                if (IsWiner)
+                    finsco += fsc;//逆风胜利+fsc
+                                  //失败不加分
+
+                if (hhs > 10)
+                    finsco += 2;//撑了很多回合
+                else if (hhs < 4)
+                    finsco -= 2;//秒杀
             }
-            int finsco = (fsc + hhs) * (1 + Convert.ToInt32(IsWiner));
+
+            if (finsco < 0)
+                finsco = 0;//保底
+
             OutPut(finsco.ToString() + "\n", Color.Red, new Font(TextBox1.Font, FontStyle.Bold));
-            return finsco;
+            return finsco;            
         }
 
 
@@ -640,7 +749,7 @@ namespace 卷界bili弹幕版
             //每? 0.1小时进行一次存档备份
             SaveGame();
             //清空文本//防止输出文本超过上限导致溢出
-            if (TextBox1.TextLength>= 214748364)
+            if (TextBox1.TextLength >= 214748364)
             {
                 TextBox1.Text = TextBox1.Text.Substring(214746364);
                 TextBox1HP.SetRTF(TextBox1);
@@ -662,21 +771,21 @@ namespace 卷界bili弹幕版
             try
             {
 #endif
-                DirectoryInfo SavePath = new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + @"\LBSoft\RWdm");
-                if (!SavePath.Exists)
-                {
-                    SavePath.Create();
-                }
-                FileInfo SaveFile = new FileInfo(SavePath.FullName + @"\gsave.rwd");
-                FileStream fs = SaveFile.Create();
-                StringBuilder sb = new StringBuilder();
-                foreach (User usr in users)
-                {
-                    sb.Append(usr.Data() + "\r\n");
-                }
-                byte[] wwrite = Encoding.UTF8.GetBytes(sb.ToString());
-                fs.Write(wwrite, 0, wwrite.Length);
-                fs.Close();
+            DirectoryInfo SavePath = new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + @"\LBSoft\RWdm");
+            if (!SavePath.Exists)
+            {
+                SavePath.Create();
+            }
+            FileInfo SaveFile = new FileInfo(SavePath.FullName + @"\gsave.rwd");
+            FileStream fs = SaveFile.Create();
+            StringBuilder sb = new StringBuilder();
+            foreach (User usr in users)
+            {
+                sb.Append(usr.Data() + "\r\n");
+            }
+            byte[] wwrite = Encoding.UTF8.GetBytes(sb.ToString());
+            fs.Write(wwrite, 0, wwrite.Length);
+            fs.Close();
 #if !DEBUG
             }
             catch (Exception e)
@@ -693,7 +802,6 @@ namespace 卷界bili弹幕版
         public void LoadGame()
         {//清理旧数据
             users.Clear();
-            HaveUser.Clear();
             //UserOnline.Clear();
             FileInfo SaveFile = new FileInfo(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + @"\LBSoft\RWdm\gsave.rwd");
             if (!SaveFile.Exists)
@@ -710,7 +818,6 @@ namespace 卷界bili弹幕版
             foreach (string rt in readth)
             {
                 users.Add(new User(rt));
-                HaveUser.Add(users[users.Count - 1].Uid);
             }
             OutPut($"存档加载完成{readth.Length}\n");
         }
@@ -759,6 +866,7 @@ namespace 卷界bili弹幕版
         private void FrmMain_FormClosing(object sender, FormClosingEventArgs e)
         {
             SaveGame();
+            Properties.Settings.Default.Save();
             switch (MessageBox.Show("是 - 退出\n否 - 进入隐藏模式\n取消 - 取消操作", "确认退出?或进入隐藏模式", MessageBoxButtons.YesNoCancel))
             {
                 case DialogResult.Yes:
