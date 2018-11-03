@@ -102,6 +102,7 @@ namespace 卷界bili弹幕版
             {
                 Properties.Settings.Default.BackColor = colorDialog1.Color;
                 frmMain.TextBox1.BackColor = Properties.Settings.Default.BackColor;
+                frmMain.labelphb.BackColor = Properties.Settings.Default.BackColor;
             }
         }
 

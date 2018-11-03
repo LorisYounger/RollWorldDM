@@ -23,6 +23,8 @@ namespace 卷界bili弹幕版
             CheckForIllegalCrossThreadCalls = false;//粗暴的干掉线程安全
 
             TextBox1.BackColor = Properties.Settings.Default.BackColor;
+            labelphb.BackColor = Properties.Settings.Default.BackColor;
+
             TextBox1.Font = Properties.Settings.Default.MainFont;
             if (Properties.Settings.Default.IsTranspare)
                 TransparencyKey = TextBox1.BackColor;
@@ -31,11 +33,36 @@ namespace 卷界bili弹幕版
 
 
             TextBox1HP.SetRTF(TextBox1);
-            OutPut("卷界欢迎您!\n当前版本B15\n使用教程:http://www.exlb.org/rollworlddm/\nBug反馈:zoujin.admin@exlb.pw\n");
+            OutPut("卷界欢迎您!\n当前版本B16\n使用教程:http://www.exlb.org/rollworlddm/\nBug反馈:zoujin.admin@exlb.pw\n");
             timeRels = DateTime.Now.Day;
             LoadGame();
+            RelsPHB();
         }
         //
+        public void RelsPHB()
+        {
+            StringBuilder sb = new StringBuilder();
+            var sort = users.OrderBy(x => x.TotalFight()).Reverse();
+            int si = 1;
+            sb.AppendLine("战力排行榜");
+            foreach (User ui in sort)
+            {
+                sb.AppendLine(($"第{si} {ui.Name} " + ui.TotalFight()));
+                if (si++ >= 5)
+                    break;
+            }
+            sb.AppendLine("\n金币排行榜");
+            sort = users.OrderBy(x => x.Money).Reverse();
+            si = 1;
+            foreach (User ui in sort)
+            {
+                sb.AppendLine($"第{si} {ui.Name} " + ui.Money);
+                if (si++ >= 5)
+                    break;
+            }
+            labelphb.Text = sb.ToString();
+        }
+
 
         #region Output
         //output需要使用记录
@@ -527,8 +554,8 @@ namespace 卷界bili弹幕版
 
             }
             //准备做个自动回复
-        }       
-        
+        }
+
         public double TrueValue(double value)//增加战斗随机性的数值
         {
             return rnd.Next((int)(value * 9), (int)(value * 11)) * 0.1;
@@ -558,7 +585,7 @@ namespace 卷界bili弹幕版
             OutPutAppend($"{USK[0]}({USpesn[0] * 0.1}%)", Color.Red, new Font(TextBox1.Font, FontStyle.Bold));
             OutPutAppend($"的伤害，{usr2.Name}对{usr1.Name}造成", Color.Black, TextBox1.Font);
             OutPutAppend($"{USK[1]}({USpesn[1] * 0.1}%)", Color.Red, new Font(TextBox1.Font, FontStyle.Bold));
-            OutPutAppend($"的伤害\n战斗结束:", Color.Black, TextBox1.Font);            
+            OutPutAppend($"的伤害\n战斗结束:", Color.Black, TextBox1.Font);
 
             //战斗评分
             int finsco = 5;
@@ -609,7 +636,7 @@ namespace 卷界bili弹幕版
                 finsco = 0;//保底
 
             OutPut(finsco.ToString() + "\n", Color.Red, new Font(TextBox1.Font, FontStyle.Bold));
-            return finsco;            
+            return finsco;
         }
 
 
@@ -905,7 +932,7 @@ namespace 卷界bili弹幕版
 
         public bool Update = false;//判断用户是否更新了个人数据
         public int VipLv = 1;//用户vip等级越高，权限越多
-        public string Name;//名字为显示用
+        public string Name = "";//名字为显示用
 
 
         //方法
@@ -913,7 +940,7 @@ namespace 卷界bili弹幕版
         public User(int uid)//注册
         {
             Uid = uid;
-            Name = uid.ToString();
+            Name = Uid.ToString().Substring(0, (Uid.ToString().Length > 4) ? 4 : Uid.ToString().Length) + "*** (未登录)";
             Money = 100;
             Exp = 0;
             Lv = 1;
@@ -947,7 +974,7 @@ namespace 卷界bili弹幕版
         {
             string[] tmps = Loadinfo.Split('|');
             Uid = Convert.ToInt32(tmps[0]);
-            Name = tmps[0];
+            Name = tmps[0].Substring(0, (tmps[0].Length > 4) ? 4 : tmps[0].Length) + "*** (未登录)";
             Money = Convert.ToInt32(tmps[1]);
             Exp = Convert.ToInt32(tmps[2]);
             Lv = Convert.ToInt32(tmps[3]);
